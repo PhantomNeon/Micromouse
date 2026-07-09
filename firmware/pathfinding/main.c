@@ -77,14 +77,23 @@ bool MoveForward()
 {
     if (API_moveForward("1"))
     {
-        if (botFacing == 1)
+        switch (botFacing)
+        {
+        case NORTH:
             botY++;
-        else if (botFacing == 2)
+            break;
+        case WEST:
             botX--;
-        else if (botFacing == 4)
+            break;
+        case SOUTH:
             botY--;
-        else if (botFacing == 8)
+            break;
+        case EAST:
             botX++;
+            break;
+        default:
+            break;
+        }
         return true;
     }
 
@@ -94,37 +103,39 @@ bool MoveForward()
 // Convert an orientation relative to the bot to an orientation relative to the world
 int BotOrientationToWorldOrientation(int num)
 {
-    if (botFacing == 1)
+    switch (botFacing)
     {
+    case NORTH:
         return num;
-    }
+        break;
 
-    else if (botFacing == 2)
-    {
-        if (num == 8)
-            return 1;
+    case WEST:
+        if (num == EAST)
+            return NORTH;
 
         return num << 1;
-    }
+        break;
 
-    else if (botFacing == 4)
-    {
-        if (num == 1)
-            return 4;
-        else if (num == 2)
-            return 8;
-        else if (num == 4)
-            return 1;
-        else if (num == 8)
-            return 2;
-    }
-
-    else if (botFacing == 8)
-    {
-        if (num == 1)
-            return 8;
+    case EAST:
+        if (num == NORTH)
+            return EAST;
 
         return num >> 1;
+        break;
+
+    case SOUTH:
+        if (num == NORTH)
+            return SOUTH;
+        else if (num == WEST)
+            return EAST;
+        else if (num == SOUTH)
+            return NORTH;
+        else if (num == EAST)
+            return WEST;
+        break;
+
+    default:
+        break;
     }
 }
 
@@ -134,11 +145,11 @@ int CalculateWallConfiguration()
     int WallConfiguration = 0;
 
     if (API_wallFront())
-        WallConfiguration += BotOrientationToWorldOrientation(1);
+        WallConfiguration += BotOrientationToWorldOrientation(NORTH);
     if (API_wallRight())
-        WallConfiguration += BotOrientationToWorldOrientation(8);
+        WallConfiguration += BotOrientationToWorldOrientation(EAST);
     if (API_wallLeft())
-        WallConfiguration += BotOrientationToWorldOrientation(2);
+        WallConfiguration += BotOrientationToWorldOrientation(WEST);
 
     return WallConfiguration;
 }
@@ -148,35 +159,35 @@ void UpdateMazeWalls(Cell maze[MazeWidth][MazeHeight], int x, int y, int config)
 {
     maze[x][y].walls = maze[x][y].walls | config;
 
-    if ((config & 1) == 1)
+    if (isWalled(config, NORTH))
     {
-        if ((y + 1) <= 15)
+        if ((y + 1) < MazeHeight)
         {
-            maze[x][y + 1].walls = maze[x][y + 1].walls | 4;
+            maze[x][y + 1].walls = maze[x][y + 1].walls | SOUTH;
         }
     }
 
-    if ((config & 2) == 2)
+    if (isWalled(config, WEST))
     {
         if ((x - 1) >= 0)
         {
-            maze[x - 1][y].walls = maze[x - 1][y].walls | 8;
+            maze[x - 1][y].walls = maze[x - 1][y].walls | EAST;
         }
     }
 
-    if ((config & 4) == 4)
+    if (isWalled(config, SOUTH))
     {
         if ((y - 1) >= 0)
         {
-            maze[x][y - 1].walls = maze[x][y - 1].walls | 1;
+            maze[x][y - 1].walls = maze[x][y - 1].walls | NORTH;
         }
     }
 
-    if ((config & 8) == 8)
+    if (isWalled(config, EAST))
     {
-        if ((x + 1) <= 15)
+        if ((x + 1) < MazeWidth)
         {
-            maze[x + 1][y].walls = maze[x + 1][y].walls | 2;
+            maze[x + 1][y].walls = maze[x + 1][y].walls | WEST;
         }
     }
 }
@@ -200,7 +211,7 @@ void FloodCell(Cell maze[MazeWidth][MazeHeight], Cell cell)
     {
         maze[cell.x][cell.y] = cell;
 
-        if (!isWalled(cell.walls, NORTH) && (cell.y + 1) <= MazeHeight - 1)
+        if (!isWalled(cell.walls, NORTH) && (cell.y + 1) < MazeHeight)
         {
             Cell front = {cell.x, cell.y + 1, cell.x, cell.y, cell.floodValue + 1, maze[cell.x][cell.y + 1].walls};
 
@@ -224,7 +235,7 @@ void FloodCell(Cell maze[MazeWidth][MazeHeight], Cell cell)
                 enqueue(&CellsToFlood, rear);
         }
 
-        if (!isWalled(cell.walls, EAST) && (cell.x + 1) <= MazeWidth - 1)
+        if (!isWalled(cell.walls, EAST) && (cell.x + 1) < MazeWidth)
         {
             Cell right = {cell.x + 1, cell.y, cell.x, cell.y, cell.floodValue + 1, maze[cell.x + 1][cell.y].walls};
 
@@ -261,7 +272,7 @@ bool Move(Cell maze[MazeWidth][MazeHeight])
     if (lowestFloodValue == 0)
         return true;
 
-    if (!isWalled(maze[botX][botY].walls, NORTH) && (botY + 1) <= MazeHeight - 1)
+    if (!isWalled(maze[botX][botY].walls, NORTH) && (botY + 1) < MazeHeight)
     {
         if (maze[botX][botY + 1].floodValue < lowestFloodValue)
         {
@@ -288,7 +299,7 @@ bool Move(Cell maze[MazeWidth][MazeHeight])
         }
     }
 
-    if (!isWalled(maze[botX][botY].walls, EAST) && (botX + 1) <= MazeWidth)
+    if (!isWalled(maze[botX][botY].walls, EAST) && (botX + 1) < MazeWidth)
     {
         if (maze[botX + 1][botY].floodValue < lowestFloodValue)
         {
@@ -329,24 +340,24 @@ bool Move(Cell maze[MazeWidth][MazeHeight])
 // Send API instructions to render known maze
 void RenderMaze(int wallConfig, Cell maze[MazeWidth][MazeHeight])
 {
-if (isWalled(wallConfig, NORTH))
-            API_setWall(botX, botY, 'n');
-        if (isWalled(wallConfig, WEST))
-            API_setWall(botX, botY, 'w');
-        if (isWalled(wallConfig, SOUTH))
-            API_setWall(botX, botY, 's');
-        if (isWalled(wallConfig, EAST))
-            API_setWall(botX, botY, 'e');
+    if (isWalled(wallConfig, NORTH))
+        API_setWall(botX, botY, 'n');
+    if (isWalled(wallConfig, WEST))
+        API_setWall(botX, botY, 'w');
+    if (isWalled(wallConfig, SOUTH))
+        API_setWall(botX, botY, 's');
+    if (isWalled(wallConfig, EAST))
+        API_setWall(botX, botY, 'e');
 
-        for (int i = 0; i < MazeWidth; i++)
+    for (int x = 0; x < MazeWidth; x++)
+    {
+        for (int y = 0; y < MazeHeight; y++)
         {
-            for (int j = 0; j < MazeHeight; j++)
-            {
-                char text[10];
-                intToStr(maze[i][j].floodValue, text);
-                API_setText(i, j, text);
-            }
+            char text[10];
+            intToStr(maze[x][y].floodValue, text);
+            API_setText(x, y, text);
         }
+    }
 }
 
 int main()
