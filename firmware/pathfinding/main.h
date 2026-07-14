@@ -1,3 +1,5 @@
+#include "queue.h"
+
 // Orientation: Bitshift left to rotate left
 // FRONT - 0001 - 1 - N
 // LEFT  - 0010 - 2 - W

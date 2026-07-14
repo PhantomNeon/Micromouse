@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "main.h"
 #include "mms-api/api.h"
-#include "queue.h"
 
 // Debug function to log flood value of entire maze
 void LogMazeFlood(Cell maze[MazeWidth][MazeHeight])
