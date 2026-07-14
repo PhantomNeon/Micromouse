@@ -14,26 +14,26 @@ typedef struct
 void initializeQueue(Queue *q)
 {
     q->front = -1;
-    q->rear = 0;
+    q->rear = -1;
 }
 
 // Function to check if the queue is empty
 bool isEmpty(Queue *q)
 {
-    return (q->front == q->rear - 1);
+    return q->front == -1;
 }
 
 // Function to check if the queue is full
 bool isFull(Queue *q)
 {
-    return (q->rear == MAX_SIZE);
+    return (q->rear + 1) % MAX_SIZE == q->front;
 }
 
 bool contains(Queue *q, Cell cell)
 {
-    for(int i = 0; i < q->front + 1; i++)
+    for (int i = q->rear; i == q->front; i = (++i % MAX_SIZE))
     {
-        if(q->item[i].x == cell.x && q->item[i].y == cell.y)
+        if (q->item[i].x == cell.x && q->item[i].y == cell.y)
             return true;
     }
 
@@ -46,8 +46,12 @@ void enqueue(Queue *q, Cell cell)
     {
         return;
     }
+    if (q->front == -1)
+    {
+        q->front = 0;
+    }
+    q->rear = (q->rear + 1) % MAX_SIZE;
     q->item[q->rear] = cell;
-    q->rear++;
 }
 
 // Function to remove an element from the queue (Dequeue operation)
@@ -57,7 +61,15 @@ void dequeue(Queue *q)
     {
         return;
     }
-    q->front++;
+
+    if (q->front == q->rear)
+    {
+        q->front = q->rear = -1;
+    }
+    else
+    {
+        q->front = (q->front + 1) % MAX_SIZE;
+    }
 }
 
 // Function to get the element at the front of the queue (Peek operation)
@@ -65,11 +77,11 @@ Cell peek(Queue *q)
 {
     if (isEmpty(q))
     {
-        Cell a;
+        Cell a = {0, 0, 0, 0, -1, 0};
         return a; // return some default value or handle
-                   // error differently
+                  // error differently
     }
-    return q->item[q->front + 1];
+    return q->item[q->front];
 }
 
 // Function to print the current queue
@@ -84,7 +96,7 @@ void printQueue(Queue *q)
 
     fprintf(stderr, "Current Queue: ");
     fflush(stderr);
-    for (int i = q->front + 1; i < q->rear; i++)
+    for (int i = q->rear; i == q->front; i = (++i % MAX_SIZE))
     {
         fprintf(stderr, "(%d, %d)", q->item[i].x, q->item[i].y);
         fflush(stderr);
