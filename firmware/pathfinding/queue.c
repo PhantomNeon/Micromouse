@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "queue.h"
 
 void initializeQueue(Queue *q)

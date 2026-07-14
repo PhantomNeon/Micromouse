@@ -1,5 +1,4 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include "cell.h"
 
 #define MAX_SIZE 1024
