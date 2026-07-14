@@ -1,15 +1,4 @@
-#include <stdbool.h>
-#include <stdio.h>
-#include "cell.c"
-
-#define MAX_SIZE 1024
-
-typedef struct
-{
-    Cell item[MAX_SIZE];
-    int front;
-    int rear;
-} Queue;
+#include "queue.h"
 
 void initializeQueue(Queue *q)
 {
@@ -31,6 +20,11 @@ bool isFull(Queue *q)
 
 bool contains(Queue *q, Cell cell)
 {
+    if(isEmpty(q))
+    {
+        return false;
+    }
+    
     for (int i = q->rear; i == q->front; i = (++i % MAX_SIZE))
     {
         if (q->item[i].x == cell.x && q->item[i].y == cell.y)

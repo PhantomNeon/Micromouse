@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "mms-api/api.c"
-#include "queue.c"
+#include "mms-api/api.h"
+#include "queue.h"
 
 // Orientation: Bitshift left to rotate left
 // FRONT - 0001 - 1 - N
